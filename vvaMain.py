@@ -1,6 +1,7 @@
 import tkinter as tk
 from tkinter import filedialog
 from moviepy.editor import VideoFileClip, clips_array
+import os
 
 # Function to open file dialog and select an mp4 file
 def select_file():
@@ -74,28 +75,45 @@ def main():
         print("No file selected. Exiting...")
         return
 
-    # Load the video using MoviePy and limit to the first 5 seconds
-    clip = VideoFileClip(input_file).subclip(200, 205)  # Only take the first 5 seconds
 
-    # Use the provided webcam pixel values
-                    # top left x value, top left y value, width, height
-    webcam_coords = (0, 231, 1920-1550, 1080-(231+511))  # Provided values
+    output_directory = ""
+    
 
-    # Step 2: Crop and combine the webcam and gameplay sections
-    final_clip = crop_and_combine(clip, webcam_coords)
+    startTime = 0
+    counter = 1
+    while startTime + 30 < VideoFileClip(input_file).duration:
 
-    # Step 3: Save the output video with standard settings (compatible codec, pixel format, etc.)
-    output_file = input_file.replace(".mp4", "_webcam_gameplay_vertical.mp4")
-    final_clip.write_videofile(
-        output_file,
-        codec='libx264',  # Standard H.264 codec
-        audio_codec='aac',  # Standard AAC audio codec
-        fps=30,  # 30 FPS is standard for most devices
-        bitrate="2000k",  # Standard bitrate
-        ffmpeg_params=['-pix_fmt', 'yuv420p']  # Ensure compatibility
-    )
+        # Load the video using MoviePy and limit to the first 5 seconds
+        clip = VideoFileClip(input_file).subclip(startTime, startTime + 30)  # Only take the first 5 seconds
+        startTime += 5
 
-    print(f"Video saved as {output_file}")
+        # Use the provided webcam pixel values
+                        # top left x value, top left y value, width, height
+        webcam_coords = (0, 231, 1920-1550, 1080-(231+511))  # Provided values
+
+        # Step 2: Crop and combine the webcam and gameplay sections
+        final_clip = crop_and_combine(clip, webcam_coords)
+
+        # Step 3: Save the output video with standard settings (compatible codec, pixel format, etc.)
+        
+        output_file = os.path.join(output_directory, f"shorts_part_{counter}.mp4")
+        counter += 1
+        final_clip.write_videofile(
+            output_file,
+            codec='libx264',  # Standard H.264 codec
+            audio_codec='aac',  # Standard AAC audio codec
+            fps=60,  # 30 FPS is standard for most devices
+            bitrate="2000k",  # Standard bitrate
+            ffmpeg_params=['-pix_fmt', 'yuv420p']  # Ensure compatibility
+        )
+
+        print(f"Video saved as {output_file}")
+
+        clip.close()
+        final_clip.close()
+
+
+
 
 if __name__ == '__main__':
     main()
